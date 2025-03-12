@@ -26,11 +26,14 @@ kramdown:
   syntax_highlighter_opts:
     disable: true
 
-theme: minima
+remote_theme: jekyll/minima
 plugins:
 - jekyll-remote-theme
   - jekyll-feed
   - jekyll-sitemap
+
+minima:
+  skin: dark
 
 titles_from_headings:
   strip_title: true
