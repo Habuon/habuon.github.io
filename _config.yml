@@ -18,7 +18,7 @@ github_username: "Habuon"
 #########################################################################################
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
-# theme: "minima"
+theme: "minima"
 
 rss: rss
 
@@ -26,9 +26,7 @@ kramdown:
   syntax_highlighter_opts:
     disable: true
 
-remote_theme: jekyll/minima
 plugins:
-- jekyll-remote-theme
   - jekyll-feed
   - jekyll-sitemap
 
