@@ -159,17 +159,17 @@ To achieve CSRF in the Frappe framework, we need to exploit two separate securit
 The first issue arises from a new addition committed in November 2024 (`https://github.com/frappe/frappe/commit/d4382dc02055ff19966f71ab1579ffaa22c1a0a8`). The vulnerable method responsible for this issue is `is_allowed_referrer`.
 ```python
 def is_allowed_referrer(self):
-		referrer = frappe.get_request_header("Referer")
-		origin = frappe.get_request_header("Origin")
-		# Get the list of allowed referrers from cache or configuration
-		allowed_referrers = frappe.cache.get_value(
-			"allowed_referrers",
-			generator=lambda: frappe.conf.get("allowed_referrers", []),
-		)
-		# Check if the referrer or origin is in the allowed list
-		return (referrer and any(referrer.startswith(allowed) for allowed in allowed_referrers)) or (
-			origin and any(origin == allowed for allowed in allowed_referrers)
-		)
+	referrer = frappe.get_request_header("Referer")
+	origin = frappe.get_request_header("Origin")
+	# Get the list of allowed referrers from cache or configuration
+	allowed_referrers = frappe.cache.get_value(
+		"allowed_referrers",
+		generator=lambda: frappe.conf.get("allowed_referrers", []),
+	)
+	# Check if the referrer or origin is in the allowed list
+	return (referrer and any(referrer.startswith(allowed) for allowed in allowed_referrers)) or (
+		origin and any(origin == allowed for allowed in allowed_referrers)
+	)
 ```
 The check only verifies whether the provided referrer starts with the allowed referrer. This means that if a developer allows `example.com`, an attacker can use a domain like `example.com.attacker.com`, which passes the check and successfully bypasses CSRF validation.
 
