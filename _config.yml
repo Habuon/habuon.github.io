@@ -31,6 +31,8 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
 
+remote_theme: jekyll/minima
+
 minima:
   skin: dark
 
