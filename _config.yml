@@ -18,7 +18,8 @@ github_username: "Habuon"
 #########################################################################################
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
-theme: "minima"
+# theme: "minima"
+remote_theme: cotes2020/jekyll-theme-chirpy
 
 # rss: rss
 
@@ -30,8 +31,6 @@ plugins:
   - jekyll-remote-theme
   - jekyll-feed
   - jekyll-sitemap
-
-# remote_theme: jekyll/minima
 
 minima:
   skin: dark
