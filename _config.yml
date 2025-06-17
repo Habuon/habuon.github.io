@@ -18,7 +18,7 @@ github_username: "Habuon"
 #########################################################################################
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
-# theme: "minima"
+theme: "minima"
 
 # rss: rss
 
@@ -31,7 +31,7 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
 
-remote_theme: jekyll/minima
+# remote_theme: jekyll/minima
 
 minima:
   skin: dark
