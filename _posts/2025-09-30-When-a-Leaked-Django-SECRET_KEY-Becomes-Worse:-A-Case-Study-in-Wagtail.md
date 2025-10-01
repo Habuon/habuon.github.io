@@ -111,13 +111,11 @@ inclusion (LFI)** issue.
 
 ## Example scenario - exposed `.git` plus leaked `SECRET_KEY`
 
-A realistic and common way a `SECRET_KEY` becomes exposed is through accidental commits that include configuration files, `.env`, or even a `.git` directory published to a public repository or an exposed backup. Imagine a developer accidentally pushes an unignored `settings.py` containing `SECRET_KEY`. An attacker who clones the repository or retrieves the exposed `.git` data can easily extract the `SECRET_KEY` and other sensitive config values.
+A realistic and common way a `SECRET_KEY` becomes exposed is through accidental commits that include configuration files, `.env`, `.git` directory publicly available on server or an exposed backup. Imagine a developer accidentally pushes an unignored `settings.py` containing `SECRET_KEY`. An attacker who clones the repository or retrieves the exposed `.git` data can easily extract the `SECRET_KEY` and other sensitive config values.
 
 In this situation the vulnerability we discussed becomes materially worse. With the leaked `SECRET_KEY` an attacker who also controls (or compromises) a Wagtail account with sufficient permissions can forge a signed filename and use the import endpoint to read arbitrary files from the server. That file-read capability may allow the attacker to harvest additional secrets — for example, .env files, database credentials, SSH keys, or API tokens — which can in turn enable full server compromise. In short: an initial repository leak that exposes `SECRET_KEY` can cascade into a full breach when combined with the unchecked filename usage.
 
 ### Detection hints
-
- - Search public git hosting (and archived/backup sites) for the project name, repo snapshots, or accidentally published `.git` folders.
 
  - Scan commit history for accidentally committed settings.py, .env, or any file containing `SECRET_KEY`.
 
