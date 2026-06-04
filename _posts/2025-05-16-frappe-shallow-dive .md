@@ -390,7 +390,7 @@ The LDAP injection vulnerability is present in `ldap_settings.py`, specifically 
         ```
     - This can be abused in larger LDAP databases to do timing attack, since the application first checks whether the user exists and after that tries to rebind the connection with retrieved user and provided password.
 
-### **6. Authenticated SQL Injection**
+### **6. Authenticated SQL Injection (CVE-2025-55731)**
 The SQL query in `execute_query` method is formatted as follows:
 ```python
 query = """select {fields} 
